@@ -679,7 +679,6 @@ require('lazy').setup({
         gopls = {},
         pyright = {},
         tsserver = {},
-        csharp_ls = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
@@ -688,7 +687,6 @@ require('lazy').setup({
         --
         -- But for many setups, the LSP (`ts_ls`) will work just fine
         -- ts_ls = {},
-        --
 
         lua_ls = {
           -- cmd = { ... },
@@ -1008,6 +1006,7 @@ require('lazy').setup({
         additional_vim_regex_highlighting = { 'ruby' },
       },
       indent = { enable = true, disable = { 'ruby' } },
+      ignore_install = { 'dart' },
     },
     -- There are additional nvim-treesitter modules that you can use to interact
     -- with nvim-treesitter. You should go explore a few and see what interests you:
@@ -1015,10 +1014,6 @@ require('lazy').setup({
     --    - Incremental selection: Included, see `:help nvim-treesitter-incremental-selection-mod`
     --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
     --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
-  },
-  { -- codeium extension
-    'Exafunction/codeium.vim',
-    event = 'BufEnter',
   },
   -- avante.nvim plugin
   {
@@ -1032,7 +1027,7 @@ require('lazy').setup({
       openai = {
         endpoint = 'https://api.anthropic.com',
         timeout = 30000, -- timeout in milliseconds
-        model = 'claude-3-5-sonnet-20241022',
+        model = 'claude-opus-4-1-20250805',
         temperature = 0,
         max_tokens = 4096,
         -- reasoning_effort = "high" -- only supported for reasoning models (o1, etc.)
@@ -1126,6 +1121,74 @@ require('lazy').setup({
       lazy = '💤 ',
     },
   },
+})
+
+-- sql lsp setup
+require('lspconfig').sqlls.setup {
+  command = { 'sql-language-server', 'up', '--method', 'stdio' },
+  filetypes = { 'sql', 'mysql' },
+  settings = {},
+}
+
+-- dart lsp setup
+require('lspconfig').dartls.setup {
+  command = { 'dart', 'language-server', '--protocol=lsp' },
+  filetypes = { 'dart' },
+  settings = {
+    dart = {
+      showTodos = true,
+      completeFunctionCalls = true,
+    },
+  },
+  init_options = {
+    onlyAnalyzeProjectsWithOpenFiles = true,
+    suggestFromUnimportedLibraries = true,
+    closingLabels = true,
+    flutterOutline = true,
+    outline = true,
+  },
+}
+
+require('lspconfig').ts_ls.setup {
+  command = { 'typescript-language-server', '--stdio' },
+  filetypes = { 'javascript', 'javascriptreact', 'javascript.jsx', 'typescript', 'typescriptreact', 'typescript.tsx' },
+  init_options = {
+    host_info = 'neovim',
+  },
+  root_markers = { 'tsconfig.json', 'jsconfig.json', 'package.json', '.git' },
+}
+
+-- svelte lsp setup
+require('lspconfig').svelte.setup {
+  filetypes = { 'svelte' },
+  command = { 'svelte-language-server', '--stdio' },
+  root_markers = { 'package.json', '.git' },
+}
+
+require('nvim-treesitter.configs').setup {
+  highlight = {
+    enable = true,
+    -- Keep highlighting enabled for dart
+  },
+  indent = {
+    enable = true,
+    disable = { 'dart' }, -- Only disable indentation for dart
+  },
+  textobjects = {
+    select = {
+      enable = true,
+      disable = { 'dart' }, -- Disable textobjects for dart
+    },
+  },
+}
+
+-- fixes indentation issue with dart and treesitter and uses cindent instead.
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'dart',
+  callback = function()
+    vim.bo.indentexpr = '' -- Clear treesitter indentexpr
+    vim.bo.cindent = true -- Use cindent instead
+  end,
 })
 
 -- The line beneath this is called `modeline`. See `:help modeline`
